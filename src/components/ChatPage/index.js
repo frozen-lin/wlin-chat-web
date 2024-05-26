@@ -2,10 +2,10 @@
  * @Author: linwei wlin@amarsoft.com
  * @Date: 2024-05-22 21:44:58
  * @LastEditors: Please set LastEditors
- * @LastEditTime: 2024-05-25 22:30:06
+ * @LastEditTime: 2024-05-26 15:24:21
  * @FilePath: \wlin-chat-web\src\components\ChatPage\index.js
  */
-import React from 'react';
+import React,{ useState, useEffect } from 'react';
 import '@chatui/core/es/styles/index.less';
 import websocketUtils from '../../lib/websocketUtils';
 import messageUtils from '../../lib/messageUtils';
@@ -21,6 +21,26 @@ const ChatPage = () => {
     
     const { messages, appendMsg, setTyping } = useMessages(initialMessages);
 
+    useEffect(() => {
+        websocketUtils.registerHandlers((e) => {
+            console.log(e);
+            const messageResp = JSON.parse(e.data);
+            const content = {
+                text: messageResp.message,
+            };
+            if (messageResp.messageType === 'System') {
+                appendMsg(messageUtils.createSystemMessage(content));
+            }
+            if (messageResp.messageType === 'User') {
+                appendMsg(messageUtils.createOtherUserMesage(content, messageResp.fromUserId));
+            }
+    
+            if (messageResp.messageType === 'AI') {
+                appendMsg(messageUtils.createRobotMessage(content));
+            }
+        })
+    },[]);
+
     function handleSend(type, val) {
         if (type === 'text' && val.trim()) {
             appendMsg(messageUtils.createSendMesage({ text: val }));
@@ -29,12 +49,6 @@ const ChatPage = () => {
                 messageData: val,
             });
 
-
-            setTyping(true);
-
-            setTimeout(() => {
-                appendMsg(messageUtils.createRobotMessage({ text: 'Bala bala' }));
-            }, 1000);
         }
     }
 

@@ -5,6 +5,7 @@
 const path = 'http://' + window.location.hostname;
 const port = '8081';
 const WebSocketClient = {
+    messageHandlers:[],
     initWebSocket: () => { // 建立连接
         // WebSocket与普通的请求所用协议有所不同，ws等同于http，wss等同于https
         var userId = localStorage.name;
@@ -25,18 +26,11 @@ const WebSocketClient = {
         console.log("WebSocket连接发生错误");
     },
     // 接收后端消息
-    // vue 客户端根据返回的cmd类型处理不同的业务响应
     websocketonmessage: function (e) {
         console.log(e);
-        // var data = eval("(" + e.data + ")");
-        // //处理订阅信息
-        // if (data.cmd == "topic") {
-        //     //TODO 系统通知
-
-        // } else if (data.cmd == "user") {
-        //     //TODO 用户消息
-
-        // }
+        WebSocketClient.messageHandlers.forEach((cb)=>{
+            cb(e);
+        })
     },
     // 关闭连接时调用
     websocketclose: function (e) {
@@ -49,10 +43,14 @@ const initWebSocket = ()=>{
 }
 const websocketUtils = {
     initWebSocket,
+    registerHandlers:(handler)=>{
+        WebSocketClient.messageHandlers.push(handler);
+    },
     send: (message) => {
         if(!websocketClient){
             initWebSocket();
             setTimeout(() => { websocketUtils.send(message) }, 1000);
+            
             return;
         }
         websocketClient.send(JSON.stringify(message));

@@ -14,11 +14,11 @@ const createRobotMessage = (content) =>{
     }
 }
 
-const createOtherUserMesage = (content) =>{
+const createOtherUserMesage = (content,userId) =>{
     return {
         type: 'text',
         content,
-        position: 'right',
+        user: { name: userId },
     };
 }
 
